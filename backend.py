@@ -34,7 +34,7 @@ GMAIL_APP_PASSWORD    = os.getenv("GMAIL_APP_PASSWORD", "")
 engine        = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal  = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base          = declarative_base()
-pwd_context   = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context   = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # ─── MODELLƏR ─────────────────────────────────────────────────
 class User(Base):
