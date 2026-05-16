@@ -146,7 +146,7 @@ def create_token(user_id: int) -> str:
     expire = datetime.utcnow() + timedelta(days=TOKEN_EXPIRE_DAYS)
     return jwt.encode({"sub": str(user_id), "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_user(authorization: str = Header(None), db: Session = Depends(get_db)) -> User:
+def get_user(authorization: str = Header(default=None, alias="authorization"), db: Session = Depends(get_db)) -> User:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Daxil olun")
     try:
