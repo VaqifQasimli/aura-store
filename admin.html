@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA Store — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070F;--s1:#0D0D1A;--s2:#131326;--s3:#1A1A35;
+  --p:#7C3AED;--pl:#8B5CF6;--pg:rgba(124,58,237,.2);
+  --gold:#C9A227;--goldl:#E8C547;
+  --text:#EDEDFF;--muted:#6666AA;--border:#1E1E3F;--border2:#2A2A50;
+  --ok:#10B981;--err:#EF4444;--warn:#F59E0B;
+  --r:12px;--font:'Inter',sans-serif;--serif:'Playfair Display',serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(124,58,237,.15) 0%,transparent 70%)}
+.login-box{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:400px}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo h1{font-family:var(--serif);font-size:1.8rem;background:linear-gradient(135deg,var(--pl),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-logo p{color:var(--muted);font-size:.85rem;margin-top:.25rem}
+
+/* LAYOUT */
+.app{display:none;min-height:100vh}
+.app.on{display:flex}
+.sidebar{width:240px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:1.5rem;border-bottom:1px solid var(--border)}
+.sidebar-logo h2{font-family:var(--serif);font-size:1.2rem;background:linear-gradient(135deg,var(--pl),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-logo p{font-size:.72rem;color:var(--muted);margin-top:.2rem;letter-spacing:.1em}
+nav{flex:1;padding:1rem .75rem}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:10px;cursor:pointer;font-size:.875rem;font-weight:500;color:var(--muted);transition:all .2s;margin-bottom:.25rem;border:1px solid transparent}
+.nav-item:hover{background:var(--s2);color:var(--text)}
+.nav-item.active{background:var(--pg);border-color:rgba(124,58,237,.3);color:var(--pl);font-weight:600}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center}
+.sidebar-foot{padding:1rem .75rem;border-top:1px solid var(--border)}
+.logout-btn{width:100%;padding:.6rem;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#F87171;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:rgba(239,68,68,.2)}
+
+.main{flex:1;overflow-y:auto;padding:2rem}
+.page{display:none}
+.page.active{display:block}
+.page-header{margin-bottom:1.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.page-title{font-family:var(--serif);font-size:1.6rem;background:linear-gradient(135deg,var(--text),var(--pl));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem}
+.stat-icon{font-size:1.75rem;margin-bottom:.75rem}
+.stat-val{font-size:1.8rem;font-weight:700;color:var(--goldl)}
+.stat-label{font-size:.8rem;color:var(--muted);margin-top:.25rem}
+
+/* TABLE */
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.875rem}
+th{padding:.85rem 1rem;text-align:left;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--s2);border-bottom:1px solid var(--border)}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
+
+/* STATUS */
+.status{padding:.25rem .7rem;border-radius:50px;font-size:.72rem;font-weight:700;display:inline-block}
+.status-PENDING{background:rgba(245,158,11,.15);color:#FCD34D;border:1px solid rgba(245,158,11,.3)}
+.status-CONFIRMED{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3)}
+.status-SHIPPED{background:rgba(124,58,237,.15);color:var(--pl);border:1px solid rgba(124,58,237,.3)}
+.status-DELIVERED{background:rgba(16,185,129,.2);color:#10B981;border:1px solid rgba(16,185,129,.4)}
+.status-CANCELLED{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
+
+/* BUTTONS */
+.btn{padding:.5rem 1rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:var(--font)}
+.btn-primary{background:linear-gradient(135deg,var(--p),#5B21B6);color:white}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-danger{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn-success{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3)}
+.btn-success:hover{background:rgba(16,185,129,.25)}
+.btn-sm{padding:.35rem .75rem;font-size:.78rem}
+
+/* FORM */
+.fg{margin-bottom:.875rem}
+.fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em}
+.fc{width:100%;padding:.6rem .85rem;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:.875rem;font-family:var(--font);transition:border-color .2s;outline:none}
+.fc:focus{border-color:var(--pl);background:var(--s3)}
+.fc::placeholder{color:var(--muted)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-ov.on{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:20px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(.95);transition:transform .25s}
+.modal-ov.on .modal{transform:scale(1)}
+.modal-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-family:var(--serif);font-size:1.15rem}
+.modal-body{padding:1.5rem}
+.close-btn{width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s}
+.close-btn:hover{border-color:var(--err);color:var(--err)}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(120%);background:var(--s3);border:1px solid var(--border2);color:var(--text);padding:.65rem 1.25rem;border-radius:50px;font-size:.85rem;font-weight:500;z-index:500;transition:transform .3s;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+
+/* SEARCH */
+.search-bar{position:relative;flex:1;max-width:300px}
+.search-bar input{width:100%;padding:.55rem 1rem .55rem 2.3rem;background:var(--s2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-size:.85rem;font-family:var(--font);outline:none;transition:border-color .2s}
+.search-bar input:focus{border-color:var(--pl)}
+.search-bar svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);width:15px;height:15px}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar-logo p,.nav-item span,.sidebar-logo h2{display:none}
+  .sidebar-logo{padding:1rem .75rem}
+  .nav-item{justify-content:center;padding:.65rem}
+  .nav-icon{width:auto}
+  .frow{grid-template-columns:1fr}
+  .main{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">💎</div>
+      <h1>AURA Store</h1>
+      <p>Admin Panel</p>
+    </div>
+    <div class="fg">
+      <label class="fl">Admin Şifrəsi</label>
+      <input class="fc" type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:.75rem;font-size:.95rem" onclick="doAdminLogin()" id="loginBtn">Daxil ol</button>
+    <p id="loginErr" style="color:#F87171;font-size:.8rem;margin-top:.75rem;text-align:center;display:none"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div style="font-size:1.5rem">💎</div>
+      <h2>AURA Store</h2>
+      <p>ADMIN PANEL</p>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">📊</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showPage('products',this)">
+        <span class="nav-icon">📦</span><span>Məhsullar</span>
+      </div>
+      <div class="nav-item" onclick="showPage('orders',this)">
+        <span class="nav-icon">🛍️</span><span>Sifarişlər</span>
+      </div>
+      <div class="nav-item" onclick="showPage('users',this)">
+        <span class="nav-icon">👥</span><span>İstifadəçilər</span>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="logout-btn" onclick="doLogout()">🚪 Çıxış</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="dashboardPage">
+      <div class="page-header">
+        <h2 class="page-title">📊 Dashboard</h2>
+        <button class="btn btn-primary" onclick="loadStats()">🔄 Yenilə</button>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-val">-</div><div class="stat-label">Ümumi Sifarişlər</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val">-</div><div class="stat-label">İstifadəçilər</div></div>
+        <div class="stat-card"><div class="stat-icon">🛒</div><div class="stat-val">-</div><div class="stat-label">Məhsullar</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">-</div><div class="stat-label">Ümumi Gəlir</div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val">-</div><div class="stat-label">Gözləyən Sifarişlər</div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="productsPage">
+      <div class="page-header">
+        <h2 class="page-title">📦 Məhsullar</h2>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Yeni Məhsul</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Məhsul</th><th>Kateqoriya</th><th>Qiymət</th><th>Anbar</th><th>Status</th><th>Əməliyyat</th>
+          </tr></thead>
+          <tbody id="productsTable"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Yüklənir...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="ordersPage">
+      <div class="page-header">
+        <h2 class="page-title">🛍️ Sifarişlər</h2>
+        <div class="search-bar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" placeholder="Sifariş axtar..." id="orderSearch" oninput="filterOrders()">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Sifariş №</th><th>Müştəri</th><th>Şəhər</th><th>Məbləğ</th><th>Ödəniş</th><th>Status</th><th>Tarix</th><th>Əməliyyat</th>
+          </tr></thead>
+          <tbody id="ordersTable"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Yüklənir...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="usersPage">
+      <div class="page-header">
+        <h2 class="page-title">👥 İstifadəçilər</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Ad</th><th>Email</th><th>Telefon</th><th>Şəhər</th><th>Sifarişlər</th><th>Qeydiyyat</th>
+          </tr></thead>
+          <tbody id="usersTable"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Yüklənir...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-ov" id="productModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="productModalTitle">Yeni Məhsul</h3>
+      <button class="close-btn" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editProductId">
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Məhsul adı *</label>
+          <input class="fc" id="pName" placeholder="Klassik Köynək">
+        </div>
+        <div class="fg">
+          <label class="fl">Kateqoriya *</label>
+          <select class="fc" id="pCategory">
+            <option value="geyim">👕 Geyim</option>
+            <option value="elektronika">📱 Elektronika</option>
+            <option value="ev">🏠 Ev əşyaları</option>
+            <option value="idman">⚽ İdman</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Qiymət (₼) *</label>
+          <input class="fc" id="pPrice" type="number" min="0" step="0.01" placeholder="25.00">
+        </div>
+        <div class="fg">
+          <label class="fl">Köhnə qiymət (₼)</label>
+          <input class="fc" id="pOldPrice" type="number" min="0" step="0.01" placeholder="35.00">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Emoji</label>
+          <input class="fc" id="pEmoji" placeholder="👔" maxlength="4">
+        </div>
+        <div class="fg">
+          <label class="fl">Badge</label>
+          <select class="fc" id="pBadge">
+            <option value="">Yoxdur</option>
+            <option value="Yeni">Yeni</option>
+            <option value="Endirim">Endirim</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Anbar miqdarı *</label>
+        <input class="fc" id="pStock" type="number" min="0" placeholder="100">
+      </div>
+      <div class="fg">
+        <label class="fl">Təsvir</label>
+        <textarea class="fc" id="pDesc" rows="2" placeholder="Məhsul haqqında qısa məlumat"></textarea>
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:.5rem">
+        <button class="btn btn-primary" style="flex:1" onclick="saveProduct()">Yadda saxla</button>
+        <button class="btn" style="background:var(--s2);border:1px solid var(--border)" onclick="closeModal('productModal')">Ləğv et</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER STATUS MODAL -->
+<div class="modal-ov" id="orderStatusModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Sifariş Statusu</h3>
+      <button class="close-btn" onclick="closeModal('orderStatusModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editOrderId">
+      <p id="orderModalNum" style="color:var(--pl);font-weight:700;margin-bottom:1rem;font-size:1.1rem"></p>
+      <div class="fg">
+        <label class="fl">Status seçin</label>
+        <select class="fc" id="orderStatus">
+          <option value="PENDING">⏳ Gözləyir</option>
+          <option value="CONFIRMED">✅ Təsdiqləndi</option>
+          <option value="SHIPPED">🚚 Göndərildi</option>
+          <option value="DELIVERED">🎉 Çatdırıldı</option>
+          <option value="CANCELLED">❌ Ləğv edildi</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="updateOrderStatus()">Yenilə</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://aura-store-backend-ogxq.onrender.com";
+let adminToken = localStorage.getItem("admin_token") || null;
+let allOrders = [];
+
+const $ = id => document.getElementById(id);
+
+let toastT;
+function toast(msg, ok=true){
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.borderColor = ok ? "var(--border2)" : "rgba(239,68,68,.4)";
+  t.classList.add("on");
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>t.classList.remove("on"), 3000);
+}
+
+function openModal(id){ $(id).classList.add("on") }
+function closeModal(id){ $(id).classList.remove("on") }
+
+document.querySelectorAll(".modal-ov").forEach(ov=>{
+  ov.addEventListener("click", e=>{ if(e.target===ov) ov.classList.remove("on") });
+});
+
+async function adminApi(method, path, body=null){
+  const opts = {method, headers:{"Content-Type":"application/json","Authorization":`Bearer ${adminToken}`}};
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(API+path, opts);
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.detail || "Xəta baş verdi");
+  return data;
+}
+
+async function doAdminLogin(){
+  const pass = $("adminPass").value;
+  if(!pass){ $("loginErr").textContent="Şifrə daxil edin"; $("loginErr").style.display="block"; return; }
+  const btn = $("loginBtn");
+  btn.textContent = "Yüklənir..."; btn.disabled = true;
+  try{
+    const data = await fetch(API+"/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pass})});
+    const res = await data.json();
+    if(!data.ok) throw new Error(res.detail);
+    adminToken = res.token;
+    localStorage.setItem("admin_token", adminToken);
+    $("loginWrap").style.display = "none";
+    $("app").classList.add("on");
+    loadStats();
+    toast("✅ Admin panelinə xoş gəldiniz!");
+  }catch(e){
+    $("loginErr").textContent = e.message;
+    $("loginErr").style.display = "block";
+  }
+  btn.textContent = "Daxil ol"; btn.disabled = false;
+}
+
+function doLogout(){
+  adminToken = null;
+  localStorage.removeItem("admin_token");
+  $("app").classList.remove("on");
+  $("loginWrap").style.display = "flex";
+  $("adminPass").value = "";
+}
+
+function showPage(page, el){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  $(`${page}Page`).classList.add("active");
+  el.classList.add("active");
+  if(page==="dashboard") loadStats();
+  if(page==="products") loadProducts();
+  if(page==="orders") loadOrders();
+  if(page==="users") loadUsers();
+}
+
+// STATS
+async function loadStats(){
+  try{
+    const s = await adminApi("GET","/api/admin/stats");
+    $("statsGrid").innerHTML = `
+      <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-val">${s.total_orders}</div><div class="stat-label">Ümumi Sifarişlər</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val">${s.total_users}</div><div class="stat-label">İstifadəçilər</div></div>
+      <div class="stat-card"><div class="stat-icon">🛒</div><div class="stat-val">${s.total_products}</div><div class="stat-label">Məhsullar</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">${s.total_revenue.toFixed(2)} ₼</div><div class="stat-label">Ümumi Gəlir</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val">${s.pending_orders}</div><div class="stat-label">Gözləyən Sifarişlər</div></div>`;
+  }catch(e){ toast("Stats yüklənmədi: "+e.message, false) }
+}
+
+// PRODUCTS
+async function loadProducts(){
+  try{
+    const products = await adminApi("GET","/api/admin/products");
+    $("productsTable").innerHTML = products.length ? products.map(p=>`
+      <tr>
+        <td><span style="font-size:1.3rem">${p.emoji}</span> <strong>${p.name}</strong></td>
+        <td>${p.category}</td>
+        <td>${p.old_price?`<s style="color:var(--muted);font-size:.8rem">${p.old_price}₼</s> `:""}${p.price} ₼</td>
+        <td><span style="color:${p.stock<10?'#F87171':p.stock<30?'#FCD34D':'#34D399'}">${p.stock}</span></td>
+        <td><span class="status ${p.active?'status-CONFIRMED':'status-CANCELLED'}">${p.active?"Aktiv":"Deaktiv"}</span></td>
+        <td style="display:flex;gap:.5rem">
+          <button class="btn btn-sm btn-success" onclick="editProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id},'${p.name}')">🗑️</button>
+        </td>
+      </tr>`).join("") :
+      `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Məhsul yoxdur</td></tr>`;
+  }catch(e){ toast("Məhsullar yüklənmədi: "+e.message, false) }
+}
+
+function openProductModal(){
+  $("productModalTitle").textContent = "Yeni Məhsul";
+  $("editProductId").value = "";
+  $("pName").value=""; $("pCategory").value="geyim"; $("pPrice").value="";
+  $("pOldPrice").value=""; $("pEmoji").value="📦"; $("pBadge").value="";
+  $("pStock").value="100"; $("pDesc").value="";
+  openModal("productModal");
+}
+
+function editProduct(p){
+  $("productModalTitle").textContent = "Məhsulu Redaktə et";
+  $("editProductId").value = p.id;
+  $("pName").value = p.name;
+  $("pCategory").value = p.category;
+  $("pPrice").value = p.price;
+  $("pOldPrice").value = p.old_price || "";
+  $("pEmoji").value = p.emoji || "📦";
+  $("pBadge").value = p.badge || "";
+  $("pStock").value = p.stock;
+  $("pDesc").value = p.description || "";
+  openModal("productModal");
+}
+
+async function saveProduct(){
+  const id = $("editProductId").value;
+  const data = {
+    name: $("pName").value.trim(),
+    category: $("pCategory").value,
+    price: parseFloat($("pPrice").value),
+    old_price: $("pOldPrice").value ? parseFloat($("pOldPrice").value) : null,
+    emoji: $("pEmoji").value || "📦",
+    badge: $("pBadge").value || null,
+    stock: parseInt($("pStock").value) || 0,
+    description: $("pDesc").value.trim() || null,
+  };
+  if(!data.name || !data.price){ toast("Ad və qiymət mütləqdir!", false); return; }
+  try{
+    if(id){
+      await adminApi("PUT", `/api/admin/products/${id}`, data);
+      toast("✅ Məhsul yeniləndi");
+    } else {
+      await adminApi("POST", "/api/admin/products", data);
+      toast("✅ Məhsul əlavə edildi");
+    }
+    closeModal("productModal");
+    loadProducts();
+  }catch(e){ toast(e.message, false) }
+}
+
+async function deleteProduct(id, name){
+  if(!confirm(`"${name}" məhsulunu silmək istəyirsiniz?`)) return;
+  try{
+    await adminApi("DELETE", `/api/admin/products/${id}`);
+    toast("✅ Məhsul silindi");
+    loadProducts();
+  }catch(e){ toast(e.message, false) }
+}
+
+// ORDERS
+async function loadOrders(){
+  try{
+    allOrders = await adminApi("GET","/api/admin/orders");
+    renderOrders(allOrders);
+  }catch(e){ toast("Sifarişlər yüklənmədi: "+e.message, false) }
+}
+
+function filterOrders(){
+  const q = $("orderSearch").value.toLowerCase();
+  renderOrders(allOrders.filter(o=>
+    o.order_number.toLowerCase().includes(q) ||
+    (o.first_name+" "+o.last_name).toLowerCase().includes(q) ||
+    o.phone.includes(q)
+  ));
+}
+
+function renderOrders(orders){
+  const statusAz = {PENDING:"Gözləyir",CONFIRMED:"Təsdiqləndi",SHIPPED:"Göndərildi",DELIVERED:"Çatdırıldı",CANCELLED:"Ləğv edildi"};
+  $("ordersTable").innerHTML = orders.length ? orders.map(o=>`
+    <tr>
+      <td><strong style="color:var(--pl)">${o.order_number}</strong></td>
+      <td>${o.first_name} ${o.last_name}<br><span style="font-size:.75rem;color:var(--muted)">${o.phone}</span></td>
+      <td>${o.city}</td>
+      <td style="font-weight:700;color:var(--goldl)">${o.total_amount.toFixed(2)} ₼</td>
+      <td>${o.payment_method}</td>
+      <td><span class="status status-${o.status}">${statusAz[o.status]||o.status}</span></td>
+      <td style="font-size:.78rem;color:var(--muted)">${new Date(o.created_at).toLocaleDateString("az-AZ")}</td>
+      <td><button class="btn btn-sm btn-success" onclick="openOrderStatus(${o.id},'${o.order_number}','${o.status}')">✏️ Status</button></td>
+    </tr>`).join("") :
+    `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sifariş yoxdur</td></tr>`;
+}
+
+function openOrderStatus(id, num, status){
+  $("editOrderId").value = id;
+  $("orderModalNum").textContent = num;
+  $("orderStatus").value = status;
+  openModal("orderStatusModal");
+}
+
+async function updateOrderStatus(){
+  const id = $("editOrderId").value;
+  const status = $("orderStatus").value;
+  try{
+    await adminApi("PATCH", `/api/admin/orders/${id}/status`, {status});
+    toast("✅ Status yeniləndi");
+    closeModal("orderStatusModal");
+    loadOrders();
+  }catch(e){ toast(e.message, false) }
+}
+
+// USERS
+async function loadUsers(){
+  try{
+    const users = await adminApi("GET","/api/admin/users");
+    $("usersTable").innerHTML = users.length ? users.map(u=>`
+      <tr>
+        <td><strong>${u.name}</strong></td>
+        <td style="color:var(--muted)">${u.email}</td>
+        <td>${u.phone||"-"}</td>
+        <td>${u.city||"-"}</td>
+        <td><span style="background:var(--pg);color:var(--pl);padding:.2rem .6rem;border-radius:50px;font-size:.78rem;font-weight:700">${u.order_count}</span></td>
+        <td style="font-size:.78rem;color:var(--muted)">${new Date(u.created_at).toLocaleDateString("az-AZ")}</td>
+      </tr>`).join("") :
+      `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">İstifadəçi yoxdur</td></tr>`;
+  }catch(e){ toast("İstifadəçilər yüklənmədi: "+e.message, false) }
+}
+
+// INIT
+if(adminToken){
+  $("loginWrap").style.display = "none";
+  $("app").classList.add("on");
+  loadStats();
+}
+</script>
+</body>
+</html>
