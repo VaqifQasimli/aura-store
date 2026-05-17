@@ -792,7 +792,16 @@ function headers(){
 async function api(method, path, body=null){
   const opts = {method, headers: headers()};
   if(body) opts.body = JSON.stringify(body);
-  const res  = await fetch(API+path, opts);
+  let res  = await fetch(API+path, opts);
+  if(res.status === 401){
+    const refresh = localStorage.getItem("aura_refresh");
+    if(refresh){
+      try{
+        const r = await fetch(API+"/api/auth/refresh", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({refresh_token:refresh})});
+        if(r.ok){ const d=await r.json(); setUser(d); opts.headers=headers(); res=await fetch(API+path,opts); }
+      }catch(e){ doLogout(); }
+    }
+  }
   const data = await res.json();
   if(!res.ok) throw new Error(data.detail || "Xəta baş verdi");
   return data;
