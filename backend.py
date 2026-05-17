@@ -406,24 +406,3 @@ def seed():
 
 
 
-
-
-
-
-
-
-@app.get("/delete-test")
-def delete_test():
-    db = SessionLocal()
-
-    user = db.query(User).filter(
-        User.email=="vaqifqasimli023@gmail.com"
-    ).first()
-
-    if user:
-        db.delete(user)
-        db.commit()
-
-    db.close()
-
-    return {"ok": True}
