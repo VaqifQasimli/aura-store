@@ -412,7 +412,7 @@ def seed():
 
 
 
-@app.delete("/delete-test")
+@app.get("/delete-test")
 def delete_test():
     db = SessionLocal()
 
