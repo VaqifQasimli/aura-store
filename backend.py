@@ -249,7 +249,7 @@ def send_email(order):
 
         payload = json.dumps({
             "from": "AURA Store <onboarding@resend.dev>",
-            "to": [GMAIL_EMAIL],
+            "to": ["vaqifqasimli023@gmail.com"],
             "subject": f"🛍️ Yeni Sifariş {order.order_number} — AURA Store",
             "html": html
         }).encode()
