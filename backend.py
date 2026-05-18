@@ -212,19 +212,58 @@ def product_dict(p):
             "stock":p.stock,"active":p.active}
 
 def send_email(order):
-    if not GMAIL_APP_PASSWORD:
-        print("⚠️ GMAIL_APP_PASSWORD yoxdur"); return
+    import urllib.request, json
+    RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+    if not RESEND_API_KEY:
+        print("⚠️ RESEND_API_KEY yoxdur"); return
     try:
-        rows = "".join(f"<tr><td style='padding:10px'>{i.product.emoji} {i.product.name}</td><td style='padding:10px;text-align:center'>{i.quantity}</td><td style='padding:10px;text-align:right'>{i.unit_price*i.quantity:.2f} ₼</td></tr>" for i in order.items)
-        html = f"""<html><body style="font-family:Arial;background:#07070F;padding:20px"><div style="max-width:600px;margin:0 auto;background:#0D0D1A;border-radius:16px;overflow:hidden"><div style="background:linear-gradient(135deg,#7C3AED,#C9A227);padding:30px;text-align:center"><h1 style="color:white;margin:0;letter-spacing:4px">💎 AURA STORE</h1><p style="color:rgba(255,255,255,.8);margin:8px 0 0">YENİ SİFARİŞ — {order.order_number}</p></div><div style="padding:30px;color:#EDEDFF"><p><b>Ad:</b> {order.first_name} {order.last_name}</p><p><b>Telefon:</b> {order.phone}</p><p><b>Ünvan:</b> {order.address}, {order.city}</p><p><b>Ödəniş:</b> {order.payment_method}</p><table style="width:100%;border-collapse:collapse;margin-top:20px"><tr style="background:#1A1A35"><th style="padding:10px;text-align:left">Məhsul</th><th style="padding:10px">Miqdar</th><th style="padding:10px">Cəmi</th></tr>{rows}</table><div style="text-align:right;margin-top:20px;font-size:22px;font-weight:700;color:#C9A227">Ümumi: {order.total_amount:.2f} ₼</div></div></div></body></html>"""
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🛍️ Yeni Sifariş {order.order_number} — AURA Store"
-        msg["From"] = GMAIL_EMAIL; msg["To"] = GMAIL_EMAIL
-        msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-            s.login(GMAIL_EMAIL, GMAIL_APP_PASSWORD)
-            s.sendmail(GMAIL_EMAIL, GMAIL_EMAIL, msg.as_string())
-        print(f"✅ Email: {order.order_number}")
+        rows = "".join(
+            f"<tr><td style='padding:10px'>{i.product.emoji} {i.product.name}</td>"
+            f"<td style='padding:10px;text-align:center'>{i.quantity}</td>"
+            f"<td style='padding:10px;text-align:right'>{i.unit_price*i.quantity:.2f} ₼</td></tr>"
+            for i in order.items
+        )
+        html = f"""<html><body style="font-family:Arial;background:#07070F;padding:20px">
+        <div style="max-width:600px;margin:0 auto;background:#0D0D1A;border-radius:16px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#7C3AED,#C9A227);padding:30px;text-align:center">
+            <h1 style="color:white;margin:0;letter-spacing:4px">💎 AURA STORE</h1>
+            <p style="color:rgba(255,255,255,.8);margin:8px 0 0">YENİ SİFARİŞ — {order.order_number}</p>
+          </div>
+          <div style="padding:30px;color:#EDEDFF">
+            <p><b>Ad:</b> {order.first_name} {order.last_name}</p>
+            <p><b>Telefon:</b> {order.phone}</p>
+            <p><b>Ünvan:</b> {order.address}, {order.city}</p>
+            <p><b>Ödəniş:</b> {order.payment_method}</p>
+            <table style="width:100%;border-collapse:collapse;margin-top:20px">
+              <tr style="background:#1A1A35">
+                <th style="padding:10px;text-align:left">Məhsul</th>
+                <th style="padding:10px">Miqdar</th>
+                <th style="padding:10px">Cəmi</th>
+              </tr>{rows}
+            </table>
+            <div style="text-align:right;margin-top:20px;font-size:22px;font-weight:700;color:#C9A227">
+              Ümumi: {order.total_amount:.2f} ₼
+            </div>
+          </div>
+        </div></body></html>"""
+
+        payload = json.dumps({
+            "from": "AURA Store <onboarding@resend.dev>",
+            "to": [GMAIL_EMAIL],
+            "subject": f"🛍️ Yeni Sifariş {order.order_number} — AURA Store",
+            "html": html
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            }
+        )
+        urllib.request.urlopen(req)
+        print(f"✅ Email göndərildi: {order.order_number}")
     except Exception as e:
         print(f"❌ Email xətası: {e}")
 
