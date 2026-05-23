@@ -331,8 +331,14 @@ def admin_get_products(is_admin: bool = Depends(get_admin), db: Session = Depend
 
 @app.post("/api/admin/products")
 def admin_create_product(data: ProductSchema, is_admin: bool = Depends(get_admin), db: Session = Depends(get_db)):
-d = data.dict(); imgs = d.pop("images", []); p = Product(**d); p.images = json.dumps(imgs); db.add(p); db.commit(); db.refresh(p)    return product_dict(p)
-
+    d = data.dict()
+    imgs = d.pop("images", [])
+    p = Product(**d)
+    p.images = json.dumps(imgs)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return product_dict(p)
 @app.put("/api/admin/products/{pid}")
 def admin_update_product(pid: int, data: ProductSchema, is_admin: bool = Depends(get_admin), db: Session = Depends(get_db)):
     p = db.query(Product).filter(Product.id == pid).first()
