@@ -298,6 +298,12 @@ tr:hover td{background:var(--s2)}
         <label class="fl">Təsvir</label>
         <textarea class="fc" id="pDesc" rows="2" placeholder="Məhsul haqqında qısa məlumat"></textarea>
       </div>
+      <div class="fg">
+  <label class="fl">Şəkillər</label>
+  <input type="file" class="fc" id="pImages" accept="image/*" multiple onchange="previewImages(this)">
+  <div id="imagePreview" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem"></div>
+  <div id="uploadedUrls" style="display:none"></div>
+</div>
       <div style="display:flex;gap:.75rem;margin-top:.5rem">
         <button class="btn btn-primary" style="flex:1" onclick="saveProduct()">Yadda saxla</button>
         <button class="btn" style="background:var(--s2);border:1px solid var(--border)" onclick="closeModal('productModal')">Ləğv et</button>
