@@ -469,7 +469,32 @@ function editProduct(p){
   $("pDesc").value = p.description || "";
   openModal("productModal");
 }
+let uploadedImageUrls = [];
 
+function previewImages(input){
+  const preview = $("imagePreview");
+  preview.innerHTML = "";
+  uploadedImageUrls = [];
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.style = "width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)";
+      preview.appendChild(img);
+      uploadImageToCloud(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageToCloud(base64){
+  try{
+    const res = await adminApi("POST", "/api/admin/upload", {image: base64});
+    uploadedImageUrls.push(res.url);
+    toast("✅ Şəkil yükləndi!");
+  }catch(e){ toast("❌ Şəkil yüklənmədi: "+e.message, false) }
+}
 async function saveProduct(){
   const id = $("editProductId").value;
   const data = {
