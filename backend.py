@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -445,6 +445,27 @@ def seed():
         print(f"✅ {len(items)} məhsul əlavə edildi")
     finally:
         db.close()
+
+@app.post("/api/admin/upload")
+async def upload_image(request: Request, is_admin: bool = Depends(get_admin)):
+    from fastapi import Request
+    import json
+    body = await request.json()
+    image_data = body.get("image")
+    timestamp = str(int(time.time()))
+    sig_str = f"timestamp={timestamp}{CLOUDINARY_SEC}"
+    signature = hashlib.sha1(sig_str.encode()).hexdigest()
+    data = urllib.parse.urlencode({
+        "file": image_data,
+        "timestamp": timestamp,
+        "api_key": CLOUDINARY_KEY,
+        "signature": signature,
+    }).encode()
+    url = f"https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD}/image/upload"
+    req = urllib.request.Request(url, data=data)
+    res = urllib.request.urlopen(req)
+    result = json.loads(res.read())
+    return {"url": result["secure_url"]}
 
 
 
