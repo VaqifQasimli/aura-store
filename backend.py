@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, Session, relationship
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Optional, List
-import hashlib, os, smtplib
+import hashlib, os, smtplib, urllib.request, urllib.parse, base64, time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -15,6 +15,9 @@ DATABASE_URL       = os.getenv("DATABASE_URL", "sqlite:///./aurastore.db")
 GMAIL_EMAIL        = os.getenv("GMAIL_EMAIL", "aura.store.0023@gmail.com")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 ADMIN_PASSWORD     = os.getenv("ADMIN_PASSWORD", "aura-admin-2025")
+CLOUDINARY_CLOUD = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_KEY   = os.getenv("CLOUDINARY_API_KEY", "")
+CLOUDINARY_SEC   = os.getenv("CLOUDINARY_API_SECRET", "")
 
 engine       = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
