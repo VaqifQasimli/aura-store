@@ -506,6 +506,7 @@ async function saveProduct(){
     badge: $("pBadge").value || null,
     stock: parseInt($("pStock").value) || 0,
     description: $("pDesc").value.trim() || null,
+    images: uploadedImageUrls,
   };
   if(!data.name || !data.price){ toast("Ad və qiymət mütləqdir!", false); return; }
   try{
