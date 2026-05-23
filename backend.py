@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, Session, relationship
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Optional, List
-import hashlib, os, smtplib, urllib.request, urllib.parse, base64, time
+import hashlib, os, smtplib, urllib.request, urllib.parse, base64, time, json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -331,14 +331,15 @@ def admin_get_products(is_admin: bool = Depends(get_admin), db: Session = Depend
 
 @app.post("/api/admin/products")
 def admin_create_product(data: ProductSchema, is_admin: bool = Depends(get_admin), db: Session = Depends(get_db)):
-    p = Product(**data.dict()); db.add(p); db.commit(); db.refresh(p)
-    return product_dict(p)
+d = data.dict(); imgs = d.pop("images", []); p = Product(**d); p.images = json.dumps(imgs); db.add(p); db.commit(); db.refresh(p)    return product_dict(p)
 
 @app.put("/api/admin/products/{pid}")
 def admin_update_product(pid: int, data: ProductSchema, is_admin: bool = Depends(get_admin), db: Session = Depends(get_db)):
     p = db.query(Product).filter(Product.id == pid).first()
     if not p: raise HTTPException(404, "Məhsul tapılmadı")
-    for k, v in data.dict().items(): setattr(p, k, v)
+    d = data.dict(); imgs = d.pop("images", []);
+for k, v in d.items(): setattr(p, k, v)
+p.images = json.dumps(imgs)
     db.commit(); db.refresh(p)
     return product_dict(p)
 
